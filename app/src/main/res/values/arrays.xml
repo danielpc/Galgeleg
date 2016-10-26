@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="words">
+        <item>PIZZA</item>
+        <item>PAELLA</item>
+        <item>ANDROID</item>
+        <item>ÆBLE</item>
+        <item>Ø</item>
+        <item>SKOV</item>
+        <item>FLÆSKESTEG</item>
+        <item>LANDBRUGSMASKINE</item>
+        <item>SPORVONGSKINNESKIDTSKRAPPER</item>
+    </string-array>
+</resources>
