@@ -3,9 +3,12 @@ package danielpc.dk.galgeleg;
 import java.util.Random;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Gravity;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.GridView;
@@ -22,12 +25,12 @@ import android.widget.ImageView;
  */
 
 public class GameActivity extends Activity {
+
+    private GameLogic game;
     //the words
     private String[] words;
     //random for word selection
     private Random random;
-    //store the current word
-    private String currWord;
     //the layout holding the answer
     private LinearLayout wordLayout;
     //text views for each letter in the answer
@@ -47,19 +50,22 @@ public class GameActivity extends Activity {
     //number correctly guessed
     private int numCorr;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        game = new GameLogic();
+
+
+
         //read answer words in
         Resources res = getResources();
         words = res.getStringArray(R.array.words);
 
-        //initialize random
-        random = new Random();
-        //initialize word
-        currWord="";
+
 
         //get answer area
         wordLayout = (LinearLayout)findViewById(R.id.word);
@@ -81,8 +87,29 @@ public class GameActivity extends Activity {
             bodyParts[p].setVisibility(View.INVISIBLE);
         }
         //start gameplay
-        playGame();
 
+        new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object... arg0) {
+                System.out.println("Henter ord fra DRs server....");
+
+                try {
+                    game.hentOrdFraDr();
+                    return "Ordene blev korrekt hentet fra DR's server";
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return "Ordene blev ikke hentet korrekt: "+e;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Object o) {
+                game.newGame();
+                System.out.println("word from logic: " + game.getWord());
+
+                playGame();
+            }
+        }.execute();
     }
 
     //play a new game
@@ -90,23 +117,21 @@ public class GameActivity extends Activity {
 
 
         //choose a random word from the array
-        String newWord = words[random.nextInt(words.length)];
-        //make sure the new word is new and not the same as the last time
-        while(newWord.equals(currWord)) newWord = words[random.nextInt(words.length)];
-        //update current word
-        currWord = newWord;
+        String newWord = game.getShownWord();
+
 
         //create new array for character text views
-        charViews = new TextView[currWord.length()];
+        charViews = new TextView[game.getWord().length()];
 
         //remove any existing letters
         wordLayout.removeAllViews();
 
+
         //loop through characters
-        for(int c=0; c<currWord.length(); c++){
+        for(int c=0; c<game.getWord().length(); c++){
             charViews[c] = new TextView(this);
             //set the current letter
-            charViews[c].setText(""+currWord.charAt(c));
+            charViews[c].setText(""+game.getWord().charAt(c));
             //set layout
             charViews[c].setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
                     LayoutParams.WRAP_CONTENT));
@@ -117,15 +142,14 @@ public class GameActivity extends Activity {
             wordLayout.addView(charViews[c]);
         }
 
+
         //reset adapter
         ltrAdapt=new WordAdapter(this);
         letters.setAdapter(ltrAdapt);
 
         //start part at zero
         currPart=0;
-        //set word length and correct choices
-        numChars=currWord.length();
-        numCorr=0;
+
 
         //hide all parts
         for(int p=0; p<numParts; p++){
@@ -135,34 +159,52 @@ public class GameActivity extends Activity {
 
     public void wordPressedButton(View view){
         //find out which letter was pressed
-        String letter=((TextView)view).getText().toString();
-        char letterChar = letter.charAt(0);
+        String letter=((TextView)view).getText().toString().toLowerCase();
+        char guessChar = letter.charAt(0);
         //disable view
         view.setEnabled(false);
         view.setBackgroundResource(R.drawable.letter_down);
 
-        //check if correct
-        boolean correct=false;
-        for(int k=0; k<currWord.length(); k++){
-            if(currWord.charAt(k)==letterChar){
-                correct=true;
-                numCorr++;
-                charViews[k].setTextColor(Color.BLACK);
-            }
+        //System.out.println("shown word " + game.getShownWord());
+
+        if(game.isGameLost() || game.isWordGuessed()) {
+            return;
         }
-        System.out.println("correct " + correct + " numCorr " + numCorr + " numChars " + numChars + " wordpressed " + letter + " word " + currWord + " length "  + currWord.length());
-        //check in case won
-        if(correct){
-            if(numCorr==numChars){
-                //disable all buttons
+
+
+        // correct guess
+        if(game.guess(guessChar)) {
+
+            for(int k=0; k<game.getWord().length(); k++){
+                if(game.getWord().charAt(k)==guessChar){
+                    charViews[k].setTextColor(Color.BLACK);
+                }
+
+            }
+            if(game.isWordGuessed()) {
+
+                // Get the app's shared preferences
+                SharedPreferences prefs = getSharedPreferences("danielpc.dk.galgeleg.file", MODE_PRIVATE);
+                int winCounter = prefs.getInt("winCounter", 0);
+
+                // Increment the counter
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt("winCounter", ++winCounter);
+                editor.commit(); // This line is IMPORTANT. If you miss this one its not gonna work!
+
+
+
+                //disable the buttons
                 disableBtns();
+
                 //let user know they have won, ask if they want to play again
                 AlertDialog.Builder winBuild = new AlertDialog.Builder(this);
                 winBuild.setTitle("YAY");
-                winBuild.setMessage("You win!\n\nThe answer was:\n\n"+currWord);
+                winBuild.setMessage("You guessed the word in " + game.getGuesses().size() + " guesses");
                 winBuild.setPositiveButton("Play Again",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
+                                game.newGame();
                                 GameActivity.this.playGame();
                             }});
                 winBuild.setNegativeButton("Exit",
@@ -171,37 +213,42 @@ public class GameActivity extends Activity {
                                 GameActivity.this.finish();
                             }});
                 winBuild.show();
+
             }
-        }
-        //check if user still has guesses
-        else if(currPart<numParts){
-            //show next part
+        } else {
+
             bodyParts[currPart].setVisibility(View.VISIBLE);
             currPart++;
+
+            if(game.isGameLost()) {
+
+                disableBtns();
+
+                //let the user know they lost, ask if they want to play again
+                AlertDialog.Builder loseBuild = new AlertDialog.Builder(this);
+                loseBuild.setTitle("OOPS");
+                loseBuild.setMessage("You lost. The word was: " + game.getWord());
+                loseBuild.setPositiveButton("Play Again",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                game.newGame();
+                                GameActivity.this.playGame();
+                                //hide all bodyparts
+                                for(int p = 0; p < numParts; p++) {
+                                    bodyParts[p].setVisibility(View.INVISIBLE);
+                                }
+                            }});
+                loseBuild.setNegativeButton("Exit",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                GameActivity.this.finish();
+                            }});
+                loseBuild.show();
+
+
+            }
         }
-        else{
-            //user has lost
-            disableBtns();
-            //let the user know they lost, ask if they want to play again
-            AlertDialog.Builder loseBuild = new AlertDialog.Builder(this);
-            loseBuild.setTitle("OOPS");
-            loseBuild.setMessage("You lose!\n\nThe answer was:\n\n"+currWord);
-            loseBuild.setPositiveButton("Play Again",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            GameActivity.this.playGame();
-                            //hide all bodyparts
-                            for(int p = 0; p < numParts; p++) {
-                                bodyParts[p].setVisibility(View.INVISIBLE);
-                            }
-                        }});
-            loseBuild.setNegativeButton("Exit",
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            GameActivity.this.finish();
-                        }});
-            loseBuild.show();
-        }
+
     }
 
     //disable letter buttons

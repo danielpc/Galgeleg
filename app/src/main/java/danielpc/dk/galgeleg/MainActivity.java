@@ -1,5 +1,7 @@
 package danielpc.dk.galgeleg;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -23,6 +25,16 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        // Get the app's shared preferences
+        SharedPreferences prefs = getSharedPreferences("danielpc.dk.galgeleg.file", MODE_PRIVATE);
+        int winCounter = prefs.getInt("winCounter", 0);
+
+        // Update the TextView
+        TextView text = (TextView) findViewById(R.id.won_textView);
+        text.setText("Won " + winCounter);
+
 
         Button playBtn = (Button)findViewById(R.id.playBtn);
         playBtn.setOnClickListener(this);
