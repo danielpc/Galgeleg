@@ -21,6 +21,7 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
 
+    private Button playBtn;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,14 +37,14 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         text.setText("Won " + winCounter);
 
 
-        Button playBtn = (Button)findViewById(R.id.playBtn);
+        playBtn = (Button)findViewById(R.id.playBtn);
         playBtn.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View view) {
         //handle clicks
-        if(view.getId()==R.id.playBtn){
+        if(view == playBtn){
             Intent playIntent = new Intent(this, GameActivity.class);
             this.startActivity(playIntent);
         }
