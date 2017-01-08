@@ -1,5 +1,6 @@
 package danielpc.dk.galgeleg;
 
+import android.app.Activity;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -19,7 +20,7 @@ import android.widget.TextView;
 
 import java.util.Random;
 
-public class MainActivity extends AppCompatActivity implements OnClickListener {
+public class MainActivity extends Activity implements OnClickListener {
 
     private Button playBtn;
     @Override
@@ -29,7 +30,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
 
         // Get the app's shared preferences
-        SharedPreferences prefs = getSharedPreferences("danielpc.dk.galgeleg.file", MODE_PRIVATE);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         int winCounter = prefs.getInt("winCounter", 0);
 
         // Update the TextView
@@ -39,6 +40,22 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
 
         playBtn = (Button)findViewById(R.id.playBtn);
         playBtn.setOnClickListener(this);
+
+        System.out.println("on create");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        System.out.print("on resume");
+
+        // Get the app's shared preferences
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int winCounter = prefs.getInt("winCounter", 0);
+
+        // Update the TextView
+        TextView text = (TextView) findViewById(R.id.won_textView);
+        text.setText("Won " + winCounter);
     }
 
     @Override

@@ -184,14 +184,11 @@ public class GameActivity extends Activity {
             if(game.isWordGuessed()) {
 
                 // Get the app's shared preferences
-                SharedPreferences prefs = getSharedPreferences("danielpc.dk.galgeleg.file", MODE_PRIVATE);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 int winCounter = prefs.getInt("winCounter", 0);
 
                 // Increment the counter
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putInt("winCounter", ++winCounter);
-                editor.commit(); // This line is IMPORTANT. If you miss this one its not gonna work!
-
+                prefs.edit().putInt("winCounter", ++winCounter).commit();
 
 
                 //disable the buttons
