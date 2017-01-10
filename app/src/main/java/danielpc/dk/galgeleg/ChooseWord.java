@@ -18,6 +18,7 @@ public class ChooseWord extends Activity {
 
     private ListView mylist;
     private static GameLogic game;
+    private ArrayAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,31 +27,6 @@ public class ChooseWord extends Activity {
 
         // adapter
         game = new GameLogic();
-        getWords();
-
-        ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.activity_listview, game.getWords());
-
-
-        mylist = (ListView)findViewById(R.id.words_listView);
-        mylist.setAdapter(adapter);
-
-
-        mylist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // When clicked, show a toast with the TextView text or do whatever you need.
-                //Toast.makeText(getApplicationContext(), ((TextView) view).getText(), Toast.LENGTH_SHORT).show();
-                game.setWord((String) ((TextView) view).getText());
-                System.out.println("the word is " + game.getWord());
-
-                Intent playGame = new Intent(getBaseContext(), GameActivity.class);
-                getBaseContext().startActivity(playGame);
-
-            }
-        });
-
-    }
-
-    public static void getWords(){
         new AsyncTask() {
             @Override
             protected Object doInBackground(Object... arg0) {
@@ -67,11 +43,27 @@ public class ChooseWord extends Activity {
 
             @Override
             protected void onPostExecute(Object o) {
-                //game.newGame();
-                System.out.println("word from logic: " + game.getWord());
+                adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, game.getWords());
+                mylist = (ListView)findViewById(R.id.words_listView);
+                mylist.setAdapter(adapter);
 
-                //playGame();
+                mylist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        // When clicked, show a toast with the TextView text or do whatever you need.
+                        //Toast.makeText(getApplicationContext(), ((TextView) view).getText(), Toast.LENGTH_SHORT).show();
+                        game.setWord((String) ((TextView) view).getText());
+                        System.out.println("the word is " + game.getWord());
+
+                        Intent playGame = new Intent(getBaseContext(), GameActivity.class);
+                        getBaseContext().startActivity(playGame);
+
+                    }
+                });
+
             }
         }.execute();
+
+
     }
+
 }
