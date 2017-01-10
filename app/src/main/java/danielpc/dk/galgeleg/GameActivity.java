@@ -26,7 +26,7 @@ import android.widget.ImageView;
 
 public class GameActivity extends Activity {
 
-    private GameLogic game;
+    private static GameLogic game = new GameLogic();
     //the words
     private String[] words;
     //random for word selection
@@ -57,13 +57,10 @@ public class GameActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
-        game = new GameLogic();
-
-
-
         //read answer words in
         Resources res = getResources();
         words = res.getStringArray(R.array.words);
+
 
 
 
@@ -87,29 +84,8 @@ public class GameActivity extends Activity {
             bodyParts[p].setVisibility(View.INVISIBLE);
         }
         //start gameplay
+        playGame();
 
-        new AsyncTask() {
-            @Override
-            protected Object doInBackground(Object... arg0) {
-                System.out.println("Henter ord fra DRs server....");
-
-                try {
-                    game.hentOrdFraDr();
-                    return "Ordene blev korrekt hentet fra DR's server";
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return "Ordene blev ikke hentet korrekt: "+e;
-                }
-            }
-
-            @Override
-            protected void onPostExecute(Object o) {
-                game.newGame();
-                System.out.println("word from logic: " + game.getWord());
-
-                playGame();
-            }
-        }.execute();
     }
 
     //play a new game
@@ -117,7 +93,8 @@ public class GameActivity extends Activity {
 
 
         //choose a random word from the array
-        String newWord = game.getShownWord();
+        // String newWord = game.getShownWord();
+        String newWord = "test";
 
 
         //create new array for character text views

@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements OnClickListener {
     public void onClick(View view) {
         //handle clicks
         if(view == playBtn){
-            Intent playIntent = new Intent(this, GameActivity.class);
+            Intent playIntent = new Intent(this, ChooseWord.class);
             this.startActivity(playIntent);
         }
     }

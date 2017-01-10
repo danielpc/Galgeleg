@@ -17,17 +17,17 @@ public class GameLogic {
     private static final int MAX_GUESSES = 6;
 
     private List<String> words;
-    private String word;
-    private String shownWord;
+    private static String word;
+    private static String shownWord;
     private List<Character> guesses;
-    private int incorrectGuesses;
+    private static int incorrectGuesses;
 
     public GameLogic() {
 
         words = new ArrayList<>();
 
-        words.add("bil");
-        words.add("ø");
+         words.add("bil");
+         words.add("ø");
     }
 
     public void newGame() {
@@ -94,6 +94,15 @@ public class GameLogic {
         return shownWord;
     }
 
+    public List<String> getWords() {
+        return words;
+    }
+
+    public void setWord(String word) {
+        this.word = word;
+    }
+
+    // network
     public static String hentUrl(String url) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
         StringBuilder sb = new StringBuilder();
@@ -107,21 +116,10 @@ public class GameLogic {
 
     public void hentOrdFraDr() throws Exception {
         String data = hentUrl("http://dr.dk");
-        //System.out.println("data = " + data);
         data = data.substring(data.indexOf("<body")).
                 replaceAll("<.+?>", " ").toLowerCase().replaceAll("[^a-zæøå]", " ").
                 replaceAll(" [a-zæøå] "," "). // fjern 1-bogstavsord
                 replaceAll(" [a-zæøå][a-zæøå] "," "); // fjern 2-bogstavsord
-
-        //System.out.println("data = " + data);
-
         words.addAll(new HashSet<String>(Arrays.asList(data.split(" "))));
-
-        /*
-        for(String w: words){
-            System.out.println("word: " + w);
-        }
-        */
-
     }
 }
