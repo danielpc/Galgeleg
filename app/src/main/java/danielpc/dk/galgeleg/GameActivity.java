@@ -3,6 +3,7 @@ package danielpc.dk.galgeleg;
 import java.util.Random;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -26,11 +27,9 @@ import android.widget.ImageView;
 
 public class GameActivity extends Activity {
 
-    private static GameLogic game = new GameLogic();
+    private GameLogic game;
     //the words
     private String[] words;
-    //random for word selection
-    private Random random;
     //the layout holding the answer
     private LinearLayout wordLayout;
     //text views for each letter in the answer
@@ -45,10 +44,7 @@ public class GameActivity extends Activity {
     private int numParts=6;
     //current part - will increment when wrong answers are chosen
     private int currPart;
-    //number of characters in current word
-    private int numChars;
-    //number correctly guessed
-    private int numCorr;
+
 
 
 
@@ -57,12 +53,13 @@ public class GameActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        Intent intent = getIntent();
+        game = new GameLogic();
+        game.newGame(intent.getExtras().getString("myword"));
+
         //read answer words in
         Resources res = getResources();
         words = res.getStringArray(R.array.words);
-
-
-
 
         //get answer area
         wordLayout = (LinearLayout)findViewById(R.id.word);
@@ -92,10 +89,8 @@ public class GameActivity extends Activity {
     private void playGame(){
 
 
-        //choose a random word from the array
-        // String newWord = game.getShownWord();
-        String newWord = "test";
-
+        //choose a word from the ChooseWord
+        String newWord = game.getShownWord();
 
         //create new array for character text views
         charViews = new TextView[game.getWord().length()];
@@ -178,13 +173,15 @@ public class GameActivity extends Activity {
                 winBuild.setPositiveButton("Play Again",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                game.newGame();
-                                GameActivity.this.playGame();
+                                GameActivity.this.finish();
+                                return;
                             }});
                 winBuild.setNegativeButton("Exit",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                GameActivity.this.finish();
+                                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
                             }});
                 winBuild.show();
 
@@ -205,20 +202,17 @@ public class GameActivity extends Activity {
                 loseBuild.setPositiveButton("Play Again",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                game.newGame();
-                                GameActivity.this.playGame();
-                                //hide all bodyparts
-                                for(int p = 0; p < numParts; p++) {
-                                    bodyParts[p].setVisibility(View.INVISIBLE);
-                                }
+                                GameActivity.this.finish();
+                                return;
                             }});
                 loseBuild.setNegativeButton("Exit",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                GameActivity.this.finish();
+                                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
                             }});
                 loseBuild.show();
-
 
             }
         }

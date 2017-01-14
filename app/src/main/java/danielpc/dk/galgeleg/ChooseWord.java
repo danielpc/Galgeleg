@@ -12,28 +12,38 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 public class ChooseWord extends Activity {
 
     private ListView mylist;
-    private static GameLogic game;
+    //private GameLogic game;
     private ArrayAdapter adapter;
+    private List<String> words;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose_word);
 
+        words = new ArrayList<>();
+
         // adapter
-        game = new GameLogic();
+        //game = new GameLogic();
         new AsyncTask() {
             @Override
             protected Object doInBackground(Object... arg0) {
                 System.out.println("Henter ord fra DRs server....");
 
                 try {
-                    game.hentOrdFraDr();
+                    hentOrdFraDr();
                     return "Ordene blev korrekt hentet fra DR's server";
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -43,27 +53,42 @@ public class ChooseWord extends Activity {
 
             @Override
             protected void onPostExecute(Object o) {
-                adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, game.getWords());
+                adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_listview, words);
                 mylist = (ListView)findViewById(R.id.words_listView);
                 mylist.setAdapter(adapter);
 
                 mylist.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        // When clicked, show a toast with the TextView text or do whatever you need.
-                        //Toast.makeText(getApplicationContext(), ((TextView) view).getText(), Toast.LENGTH_SHORT).show();
-                        game.setWord((String) ((TextView) view).getText());
-                        System.out.println("the word is " + game.getWord());
-
                         Intent playGame = new Intent(getBaseContext(), GameActivity.class);
-                        getBaseContext().startActivity(playGame);
-
+                        playGame.putExtra("myword", (String) ((TextView) view).getText());
+                        startActivity(playGame);
                     }
                 });
-
             }
         }.execute();
 
 
+    }
+
+    // network
+    public static String hentUrl(String url) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
+        StringBuilder sb = new StringBuilder();
+        String linje = br.readLine();
+        while (linje != null) {
+            sb.append(linje + "\n");
+            linje = br.readLine();
+        }
+        return sb.toString();
+    }
+
+    public void hentOrdFraDr() throws Exception {
+        String data = hentUrl("http://dr.dk");
+        data = data.substring(data.indexOf("<body")).
+                replaceAll("<.+?>", " ").toLowerCase().replaceAll("[^a-zæøå]", " ").
+                replaceAll(" [a-zæøå] "," "). // fjern 1-bogstavsord
+                replaceAll(" [a-zæøå][a-zæøå] "," "); // fjern 2-bogstavsord
+        words.addAll(new HashSet<String>(Arrays.asList(data.split(" "))));
     }
 
 }

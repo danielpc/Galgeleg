@@ -16,22 +16,16 @@ import java.util.List;
 public class GameLogic {
     private static final int MAX_GUESSES = 6;
 
-    private List<String> words;
-    private static String word;
-    private static String shownWord;
+    private String word;
+    private String shownWord;
     private List<Character> guesses;
-    private static int incorrectGuesses;
-
+    private int incorrectGuesses;
     public GameLogic() {
 
-        words = new ArrayList<>();
-
-         words.add("bil");
-         words.add("ø");
     }
 
-    public void newGame() {
-        word = words.get((int)(Math.random() * words.size()));
+    public void newGame(String newword) {
+        word = newword;
         shownWord = "";
 
         for(int i = 0; i < word.length(); i++) {
@@ -94,32 +88,9 @@ public class GameLogic {
         return shownWord;
     }
 
-    public List<String> getWords() {
-        return words;
-    }
-
     public void setWord(String word) {
         this.word = word;
     }
 
-    // network
-    public static String hentUrl(String url) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(new URL(url).openStream()));
-        StringBuilder sb = new StringBuilder();
-        String linje = br.readLine();
-        while (linje != null) {
-            sb.append(linje + "\n");
-            linje = br.readLine();
-        }
-        return sb.toString();
-    }
 
-    public void hentOrdFraDr() throws Exception {
-        String data = hentUrl("http://dr.dk");
-        data = data.substring(data.indexOf("<body")).
-                replaceAll("<.+?>", " ").toLowerCase().replaceAll("[^a-zæøå]", " ").
-                replaceAll(" [a-zæøå] "," "). // fjern 1-bogstavsord
-                replaceAll(" [a-zæøå][a-zæøå] "," "); // fjern 2-bogstavsord
-        words.addAll(new HashSet<String>(Arrays.asList(data.split(" "))));
-    }
 }
